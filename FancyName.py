@@ -31,9 +31,11 @@ class PlanetaryNameGenerator:
     midvowels = ["", "kk", "ll", "xx", "rr"]
     #midconsonnants = "yr" # we will just pass it whenever we encounter doubling of any kind of consonnant
 
-    def __init__(self, filename):
-        self.fileCRC = crc(filename)  # No error catching yet
-        self.randomName = self.ConstructNameFromCRC()
+    def __init__(self, filename=None):
+        self.randomName = ''
+        if not (filename is None):
+            self.fileCRC = crc(filename)  # No error catching yet
+            self.randomName = self.ConstructNameFromCRC()
 
     def __call__(self, filename=None):
         if not (filename is None):
@@ -81,15 +83,26 @@ def crc(filename):
 if __name__ == '__main__':
     if len(argv) > 1:
         fname = os.path.normpath(argv[1])
-        giveMeNewFancyName = PlanetaryNameGenerator(fname)
-        fancyName = giveMeNewFancyName()
         #Try renaming the file to fancyName
         if os.path.isfile(fname):
+            giveMeNewFancyName = PlanetaryNameGenerator()
+            fancyName = giveMeNewFancyName(fname)
+
             oldname = os.path.basename(fname)  # contains extension
             oldname = os.path.splitext(oldname)[0]  # no extension
+
             print "Renaming %s to %s:" % (oldname, fancyName)
             os.rename(fname, fname.replace(oldname, fancyName))
-        else:
-            print "Mass renaming not ready yet"
+        elif os.path.isdir(fname):
+            confirmation = raw_input("Are you sure you want to mass rename files in folder '%s'?\r\n> " % fname)
+            if confirmation.lower() in ('yes', 'y', 'affirmative', 'gogogo'):
+                genFancyName = PlanetaryNameGenerator()
+                for filename in os.listdir(fname):
+                    filename = os.path.join(fname, filename)
+                    if os.path.isfile(filename):
+                        oldname = os.path.splitext(os.path.basename(filename))[0]  # no extension
+                        fancyName = genFancyName(filename)
+                        print "Renaming %s to %s" % (oldname, fancyName)
+                        os.rename(filename, filename.replace(oldname, fancyName))
     else:
         print USAGE
